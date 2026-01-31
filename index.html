@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="scroll-smooth" dir="ltr">
+<html lang="en" dir="ltr"> <!-- Removed scroll-smooth to fix lag -->
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -54,14 +54,14 @@
         h1, h2, h3, .font-serif { font-family: 'Playfair Display', serif; }
         .modal-content, .reveal-img, #marquee-text { will-change: transform; transform: translateZ(0); }
         
-        /* Cursor */
-        .cursor-dot { width: 8px; height: 8px; background: #C89D54; position: fixed; top: 0; left: 0; border-radius: 50%; pointer-events: none; z-index: 99999; }
-        .cursor-outline { width: 40px; height: 40px; border: 1px solid #C89D54; position: fixed; top: 0; left: 0; border-radius: 50%; pointer-events: none; z-index: 99998; }
-        body.hovering .cursor-outline { transform: scale(1.5); background: rgba(200, 157, 84, 0.1); border-color: transparent; transition: transform 0.2s, background 0.2s; }
+        /* Cursor (Optimized) */
+        .cursor-dot { width: 5px; height: 5px; background: #C89D54; position: fixed; top: 0; left: 0; border-radius: 50%; pointer-events: none; z-index: 99999; will-change: transform; }
+        .cursor-outline { width: 25px; height: 25px; border: 1px solid #C89D54; position: fixed; top: 0; left: 0; border-radius: 50%; pointer-events: none; z-index: 99998; transition: transform 0.1s; will-change: transform; }
+        body.hovering .cursor-outline { transform: scale(1.5); background: rgba(200, 157, 84, 0.1); border-color: transparent; }
         @media (hover: none) { .cursor-dot, .cursor-outline { display: none; } body { cursor: auto; } }
 
         /* Marquee */
-        #marquee-text { animation: marquee-scroll 50s linear infinite; }
+        #marquee-text { animation: marquee-scroll 50s linear infinite; will-change: transform; }
         @keyframes marquee-scroll { 0% { transform: translate3d(0,0,0); } 100% { transform: translate3d(-50%,0,0); } }
 
         /* Hero Slider */
@@ -550,9 +550,17 @@
             ar: { heroTitle: "فـن<br>المعادن", heroSubtitle: "فخامة يدوية", exploreBtn: "تصفح", shopTitle: "أعمال مختارة", shopSubtitle: "صنع في مصر", menu: "القائمة", collections: "المجموعات", adminDash: "لوحة التحكم", welcome: "مرحباً", cart: "السلة", total: "المجموع", checkout: "شراء", placeOrder: "تأكيد الطلب", contactInfo: "معلومات الاتصال", delivery: "التوصيل", payment: "الدفع", shipMethod: "طريقة الشحن", newsOpt: "أرسل لي العروض والأخبار", featRepair: "خدمة الصيانة", featRepairDesc: "تلميع وإصلاح احترافي.", featContact: "اتصل بنا", featContactDesc: "تحتاج مساعدة؟ راسلنا.", featSocial: "تواصل معنا", featSocialDesc: "تابعنا لمعرفة الجديد.", happyClients: "عملاء سعداء", sizeGuide: "المقاسات", login: "دخول" }
         };
 
+        // *** Helper function to format currency ***
+        function formatCurrency(amount) {
+            // Converts numbers like 2100 to "2,100" and adds EGP or ج.م
+            const formattedNum = Number(amount).toLocaleString('en-US');
+            const symbol = currentLang === 'ar' ? 'ج.م' : 'EGP';
+            return `${formattedNum} ${symbol}`;
+        }
+
         // *** NEW FUNCTION: Fetch Data from Supabase ***
         async function fetchProductsFromSupabase() {
-            console.log("Fetching from Supabase...");
+            // console.log("Fetching from Supabase...");
             let { data, error } = await supabaseClient
                 .from('products')
                 .select('*');
@@ -564,7 +572,6 @@
             }
 
             if (data) {
-                console.log('Products fetched:', data);
                 products = data;
                 renderProducts(); // Update UI
                 // Update Admin if open
@@ -586,13 +593,13 @@
             const promoEl = document.getElementById('promo-bar-text');
             if(promoEl && siteContent.promoText) promoEl.innerText = siteContent.promoText;
 
-            setTimeout(() => { document.getElementById('preloader').style.display='none'; gsap.to('.fade-in-up', {opacity:1, y:0, duration:0.5, stagger:0.1}); }, 1000);
+            setTimeout(() => { document.getElementById('preloader').style.display='none'; gsap.to('.fade-in-up', {opacity:1, y:0, duration:0.5, stagger:0.1}); }, 500); // Reduced delay for speed
         });
 
         // --- FUNCTIONS ---
         function initSlider() {
             const container = document.getElementById('hero-slider');
-            container.innerHTML = heroImages.map((img, i) => `<div class="hero-slide ${i === 0 ? 'active' : ''}"><img src="${img}"></div>`).join('');
+            container.innerHTML = heroImages.map((img, i) => `<div class="hero-slide ${i === 0 ? 'active' : ''}"><img src="${img}" loading="lazy" decoding="async"></div>`).join('');
             setInterval(() => {
                 const slides = document.querySelectorAll('.hero-slide');
                 if(slides.length > 0) {
@@ -640,8 +647,8 @@
             const res = products.filter(p => p.title_en.toLowerCase().includes(val.toLowerCase()) || p.title_ar.includes(val));
             document.getElementById('search-results').innerHTML = res.map(p => `
                 <div class="flex gap-4 cursor-pointer" onclick="toggleSearch(); openProductModal(${p.id})">
-                    <img src="${getMainImage(p)}" class="w-16 h-16 object-cover border" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';">
-                    <div><h4 class="font-bold text-sm">${p.title_en}</h4><p class="text-xs">${p.price} EGP</p></div>
+                    <img src="${getMainImage(p)}" class="w-16 h-16 object-cover border" loading="lazy" decoding="async">
+                    <div><h4 class="font-bold text-sm">${p.title_en}</h4><p class="text-xs">${formatCurrency(p.price)}</p></div>
                 </div>
             `).join('');
         }
@@ -654,21 +661,19 @@
             const grid = document.getElementById('product-grid');
             const filtered = cat === 'all' ? products : products.filter(p => p.category === cat);
             
-            grid.innerHTML = filtered.map(p => {
-                console.log('Rendering product:', p);
-                return `
+            grid.innerHTML = filtered.map(p => `
                 <div class="group cursor-pointer fade-in-up relative" onclick="openProductModal(${p.id})">
                     <button onclick="event.stopPropagation(); toggleWishlistItem(${p.id})" class="absolute top-3 right-3 z-20 text-xl ${wishlist.includes(p.id) ? 'text-brandGold' : 'text-white'} hover:scale-110 transition"><i class="${wishlist.includes(p.id) ? 'fas' : 'far'} fa-heart shadow-md"></i></button>
                     <div class="relative overflow-hidden mb-3 aspect-[3/4] bg-[#F7F5F2]">
-                        <img loading="lazy" src="${getMainImage(p)}" class="w-full h-full object-cover transition duration-700 group-hover:scale-105 reveal-img" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';">
+                        <img loading="lazy" decoding="async" src="${getMainImage(p)}" class="w-full h-full object-cover transition duration-700 group-hover:scale-105 reveal-img" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';">
                         <div class="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity"><span class="text-white font-serif italic text-xl">View</span></div>
                     </div>
                     <div class="flex justify-between items-start">
                         <div><h3 class="font-serif text-md text-brandDark">${currentLang === 'ar' ? p.title_ar : p.title_en}</h3><p class="text-[10px] text-brandGold uppercase font-bold tracking-widest mt-1">${p.category}</p></div>
-                        <span class="font-serif text-sm text-brandDark">${p.price} EGP</span>
+                        <span class="font-serif text-sm text-brandDark">${formatCurrency(p.price)}</span>
                     </div>
                 </div>
-            `}).join('');
+            `).join('');
         }
 
         // *** ROBUST IMAGE EXTRACTOR (THE FIX) ***
@@ -738,7 +743,7 @@
             if(!grid) return;
             grid.innerHTML = reviews.map(r => `
                 <div class="review-card">
-                    <img src="${r.img}" class="review-img">
+                    <img src="${r.img}" class="review-img" loading="lazy">
                     <div class="review-stars"><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i><i class="fas fa-star"></i></div>
                     <p class="review-text">"${r.text}"</p>
                     <p class="review-author">${r.name} <span class="verified-badge"><i class="fas fa-check-circle"></i> Verified</span></p>
@@ -766,8 +771,8 @@
         window.openCheckout = () => {
             if(cart.length === 0) return showToast("Cart is empty");
             const list = document.getElementById('checkout-items-list');
-            list.innerHTML = cart.map(i => `<div class="flex gap-4 items-center border-b border-brandBorder pb-4"><div class="relative"><img src="${i.image}" class="w-16 h-16 object-cover border border-brandBorder" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';"><span class="absolute -top-2 -right-2 bg-gray-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">${i.qty}</span></div><div class="flex-1"><p class="text-sm font-bold text-brandBlack font-serif">${currentLang==='ar'?i.title_ar:i.title_en}</p><p class="text-xs text-brandGray font-sans">${i.material} | ${i.price} EGP</p></div></div>`).join('');
-            if(isRoyal) list.innerHTML += `<div class="flex gap-4 items-center border-b border-brandBorder pb-4"><div class="w-16 h-16 bg-brandDark flex items-center justify-center text-brandGold"><i class="fas fa-crown text-2xl"></i></div><div class="flex-1"><p class="text-sm font-bold text-brandBlack font-serif">Royal Packaging</p><p class="text-xs text-brandGray font-sans">250 EGP</p></div></div>`;
+            list.innerHTML = cart.map(i => `<div class="flex gap-4 items-center border-b border-brandBorder pb-4"><div class="relative"><img src="${i.image}" class="w-16 h-16 object-cover border border-brandBorder" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';"><span class="absolute -top-2 -right-2 bg-gray-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">${i.qty}</span></div><div class="flex-1"><p class="text-sm font-bold text-brandBlack font-serif">${currentLang==='ar'?i.title_ar:i.title_en}</p><p class="text-xs text-brandGray font-sans">${i.material} | ${formatCurrency(i.price)}</p></div></div>`).join('');
+            if(isRoyal) list.innerHTML += `<div class="flex gap-4 items-center border-b border-brandBorder pb-4"><div class="w-16 h-16 bg-brandDark flex items-center justify-center text-brandGold"><i class="fas fa-crown text-2xl"></i></div><div class="flex-1"><p class="text-sm font-bold text-brandBlack font-serif">Royal Packaging</p><p class="text-xs text-brandGray font-sans">${formatCurrency(250)}</p></div></div>`;
             updateCheckoutTotal(); openModal('checkout-modal');
         };
 
@@ -778,9 +783,9 @@
             if (isRoyal) subtotal += 250;
             let shipping = 0;
             if(gov === 'Cairo' || gov === 'Giza') shipping = 50; else if(gov === 'Alexandria' || gov === 'Delta') shipping = 70; else if(gov === 'Upper Egypt') shipping = 100; else if(gov) shipping = 100; 
-            document.getElementById('checkout-subtotal').innerText = subtotal + ' EGP';
-            document.getElementById('checkout-shipping').innerText = shipping + ' EGP';
-            document.getElementById('checkout-total').innerText = (subtotal + shipping) + ' EGP';
+            document.getElementById('checkout-subtotal').innerText = formatCurrency(subtotal);
+            document.getElementById('checkout-shipping').innerText = formatCurrency(shipping);
+            document.getElementById('checkout-total').innerText = formatCurrency(subtotal + shipping);
         };
 
         window.completeOrder = async () => {
@@ -812,7 +817,7 @@
                             <input type="file" id="adm-img-upload" multiple accept="image/*" class="hidden" onchange="previewAdminImages()">
                         </label>
                         <div id="adm-img-preview" class="flex gap-2 overflow-x-auto h-16 mb-4"></div>
-                        <input id="adm-img-url" placeholder="Or Image URLs (comma separated)" class="admin-input hidden">
+                        <input id="adm-img-url" placeholder="Or Image URLs (comma separated)" class="admin-input">
 
                         <label class="admin-label">Video (Upload/Link)</label>
                          <label class="file-upload-wrapper block">
@@ -837,7 +842,7 @@
                             <tbody id="admin-prod-list-body">
                                 ${products.map(p => {
                                     let img = getMainImage(p);
-                                    return `<tr class="admin-row"><td><img src="${img}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';"></td><td>${p.title_en}</td><td>${p.price}</td><td><span onclick="editProduct(${p.id})" class="action-link edit-link">EDIT</span><span onclick="deleteProd(${p.id})" class="action-link del-link">DELETE</span></td></tr>`;
+                                    return `<tr class="admin-row"><td><img src="${img}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';"></td><td>${p.title_en}</td><td>${formatCurrency(p.price)}</td><td><span onclick="editProduct(${p.id})" class="action-link edit-link">EDIT</span><span onclick="deleteProd(${p.id})" class="action-link del-link">DELETE</span></td></tr>`;
                                 }).join('')}
                             </tbody>
                         </table>
@@ -999,7 +1004,7 @@
             const tbody = document.getElementById('admin-prod-list-body');
             tbody.innerHTML = filtered.map(p => {
                  const img = getMainImage(p);
-                 return `<tr class="admin-row"><td><img src="${img}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';"></td><td>${p.title_en}</td><td>${p.price}</td><td><span onclick="editProduct(${p.id})" class="action-link edit-link">EDIT</span><span onclick="deleteProd(${p.id})" class="action-link del-link">DELETE</span></td></tr>`;
+                 return `<tr class="admin-row"><td><img src="${img}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';"></td><td>${p.title_en}</td><td>${formatCurrency(p.price)}</td><td><span onclick="editProduct(${p.id})" class="action-link edit-link">EDIT</span><span onclick="deleteProd(${p.id})" class="action-link del-link">DELETE</span></td></tr>`;
             }).join('');
         }
 
@@ -1164,7 +1169,7 @@
 
             if(els.title) els.title.innerText = currentLang==='ar' ? p.title_ar : p.title_en;
             if(els.headline) els.headline.innerText = p.headline || '';
-            if(els.price) els.price.innerText = p.price + ' EGP';
+            if(els.price) els.price.innerText = formatCurrency(p.price);
             if(els.desc) els.desc.innerText = currentLang==='ar' ? p.desc_ar : p.desc_en;
             if(els.cat) els.cat.innerText = p.category;
             if(els.qty) els.qty.innerText = currentQty;
@@ -1179,10 +1184,10 @@
                 relatedContainer.innerHTML = related.map(rel => `
                     <div class="cursor-pointer group" onclick="openProductModal(${rel.id})">
                         <div class="relative overflow-hidden mb-2 aspect-[3/4] bg-gray-100">
-                             <img src="${getMainImage(rel)}" class="w-full h-full object-cover">
+                             <img src="${getMainImage(rel)}" class="w-full h-full object-cover" loading="lazy">
                         </div>
                         <h4 class="text-xs font-bold text-brandBlack">${currentLang==='ar'?rel.title_ar:rel.title_en}</h4>
-                        <p class="text-[10px] text-brandGray">${rel.price} EGP</p>
+                        <p class="text-[10px] text-brandGray">${formatCurrency(rel.price)}</p>
                     </div>
                 `).join('');
             }
@@ -1203,9 +1208,9 @@
             }
             let total = cart.reduce((s,i)=>s+(i.price * i.qty),0);
             const totalEl = document.getElementById('cart-total');
-            if(totalEl) totalEl.innerText = total + ' EGP'; 
+            if(totalEl) totalEl.innerText = formatCurrency(total); 
             const itemsEl = document.getElementById('cart-items');
-            if(itemsEl) itemsEl.innerHTML = cart.map(i => `<div class="flex gap-4 border-b border-brandBorder pb-4 mb-2"><img src="${i.image}" class="w-16 h-16 object-cover border border-brandBorder"><div class="text-xs flex-1"><p class="font-bold text-brandBlack font-serif text-sm">${currentLang==='ar'?i.title_ar:i.title_en}</p><p class="text-brandGray mt-1">${i.material} | Qty: ${i.qty}</p><p class="text-brandDark font-bold mt-1">${i.price * i.qty} EGP</p></div></div>`).join(''); 
+            if(itemsEl) itemsEl.innerHTML = cart.map(i => `<div class="flex gap-4 border-b border-brandBorder pb-4 mb-2"><img src="${i.image}" class="w-16 h-16 object-cover border border-brandBorder"><div class="text-xs flex-1"><p class="font-bold text-brandBlack font-serif text-sm">${currentLang==='ar'?i.title_ar:i.title_en}</p><p class="text-brandGray mt-1">${i.material} | Qty: ${i.qty}</p><p class="text-brandDark font-bold mt-1">${formatCurrency(i.price * i.qty)}</p></div></div>`).join(''); 
         }
 
         // --- WISHLIST ---
@@ -1227,7 +1232,7 @@
             document.getElementById('wish-count').innerText = wishlist.length;
             document.getElementById('wishlist-items').innerHTML = wishlist.length ? wishlist.map(id => {
                 const p = products.find(x => x.id === id);
-                return `<div class="flex gap-4 border-b border-brandBorder pb-4 mb-2"><img src="${getMainImage(p)}" class="w-16 h-16 object-cover border border-brandBorder"><div class="text-xs flex-1"><p class="font-bold text-brandBlack">${currentLang==='ar'?p.title_ar:p.title_en}</p><p class="text-brandGray">${p.price} EGP</p><button onclick="toggleWishlistItem(${p.id})" class="text-red-500 mt-2 hover:underline">Remove</button></div></div>`;
+                return `<div class="flex gap-4 border-b border-brandBorder pb-4 mb-2"><img src="${getMainImage(p)}" class="w-16 h-16 object-cover border border-brandBorder"><div class="text-xs flex-1"><p class="font-bold text-brandBlack">${currentLang==='ar'?p.title_ar:p.title_en}</p><p class="text-brandGray">${formatCurrency(p.price)}</p><button onclick="toggleWishlistItem(${p.id})" class="text-red-500 mt-2 hover:underline">Remove</button></div></div>`;
             }).join('') : '<p class="text-center text-xs mt-10">Wishlist is empty</p>';
         }
 
