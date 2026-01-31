@@ -20,6 +20,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/studio-freight/lenis@1.0.29/bundled/lenis.min.js"></script>
+    <!-- Supabase Library -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
@@ -515,16 +516,8 @@
         let uploadedFiles = []; // Store base64 images (Multi)
         let uploadedVideo = null; // Store base64 video
 
-        // Data (Hardcoded - Persistent on Vercel)
-        let products = [
-            { id: 101, title_en: "Modest Chic Hand Chain", title_ar: "هاند تشين أنيق", category: "Hand Chain", price: 2100, images: ["image_6046272840270548440_121.jpg", "image_6046272840270548441_121.jpg"], desc_en: "Snag-free and perfectly lengthened for high-necks. Instantly transform your daily basics into a polished, Pinterest-worthy look.", desc_ar: "أناقة ذهبية بدون مجهود مصممة لتتألق فوق الطبقات.", headline: "Effortless gold elegance designed to shine over layers." },
-            { id: 102, title_en: "Interlocking Heart Necklace", title_ar: "قلادة القلوب المترابطة", category: "Necklace", price: 2100, images: ["image_74150f.jpg", "image_7414f2.jpg", "image_7411d1.jpg", "image_6043870549097778431_121.jpg", "image_6043870549097778432_121.jpg"], desc_en: "Symbol of unbreakable bond.", desc_ar: "رمز للرابطة الأبدية.", headline: "Love Knot" },
-            { id: 103, title_en: "Split Heart Necklace", title_ar: "قلادة القلب المقسوم", category: "Necklace", price: 1850, images: ["image_7414b4.jpg", "image_74120a.jpg", "image_6043870549097778424_121.jpg", "image_6043870549097778425_121.jpg"], desc_en: "One for you, one for me.", desc_ar: "نصف لك ونصف لي.", headline: "Soul Mate" },
-            { id: 104, title_en: "Nail Bracelet", title_ar: "سوار المسمار", category: "Bracelet", price: 1550, images: ["image_6046272840270548434_121.jpg", "image_6046272840270548435_121.jpg"], desc_en: "Modern industrial design.", desc_ar: "تصميم صناعي عصري.", headline: "Bold" },
-            { id: 105, title_en: "Arabic Calligraphy Bangle", title_ar: "سوار الحروف العربية", category: "Bracelet", price: 1550, images: ["image_74152e.jpg"], desc_en: "Elegant custom calligraphy.", desc_ar: "أناقة الخط العربي.", headline: "Heritage" },
-            { id: 106, title_en: "Red Garnet Set", title_ar: "طقم الجارنيت الأحمر", category: "Set", price: 4200, images: ["image_b8b500.jpg"], desc_en: "Royal red stone set.", desc_ar: "طقم ملكي من الجارنيت.", headline: "Royalty" },
-            { id: 107, title_en: "Snake Chain", title_ar: "سلسلة الثعبان", category: "Necklace", price: 1200, images: ["image_ac8636.jpg"], desc_en: "Sleek and modern.", desc_ar: "انسيابية وعصرية.", headline: "Modern" }
-        ];
+        // *** UPDATED FOR SUPABASE: Products are now empty initially ***
+        let products = [];
 
         let heroImages = [
             "https://images.unsplash.com/photo-1531995811006-35cb42e1a022", "https://images.unsplash.com/photo-1601121141461-9d6647bca1ed"
@@ -557,8 +550,34 @@
             ar: { heroTitle: "فـن<br>المعادن", heroSubtitle: "فخامة يدوية", exploreBtn: "تصفح", shopTitle: "أعمال مختارة", shopSubtitle: "صنع في مصر", menu: "القائمة", collections: "المجموعات", adminDash: "لوحة التحكم", welcome: "مرحباً", cart: "السلة", total: "المجموع", checkout: "شراء", placeOrder: "تأكيد الطلب", contactInfo: "معلومات الاتصال", delivery: "التوصيل", payment: "الدفع", shipMethod: "طريقة الشحن", newsOpt: "أرسل لي العروض والأخبار", featRepair: "خدمة الصيانة", featRepairDesc: "تلميع وإصلاح احترافي.", featContact: "اتصل بنا", featContactDesc: "تحتاج مساعدة؟ راسلنا.", featSocial: "تواصل معنا", featSocialDesc: "تابعنا لمعرفة الجديد.", happyClients: "عملاء سعداء", sizeGuide: "المقاسات", login: "دخول" }
         };
 
+        // *** NEW FUNCTION: Fetch Data from Supabase ***
+        async function fetchProductsFromSupabase() {
+            console.log("Fetching from Supabase...");
+            let { data, error } = await supabaseClient
+                .from('products')
+                .select('*');
+
+            if (error) {
+                console.error('Error fetching products:', error);
+                // Fallback or Alert?
+                return;
+            }
+
+            if (data) {
+                console.log('Products fetched:', data);
+                products = data;
+                renderProducts(); // Update UI
+                // Update Admin if open
+                const adminDash = document.getElementById('admin-dashboard');
+                if(adminDash && adminDash.classList.contains('active')){
+                    renderAdminDashboard('products');
+                }
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
-            applyLanguage(currentLang); updateMenuItems(); initSlider(); initCursor(); renderAdminDashboard('products');
+            fetchProductsFromSupabase(); // Call Supabase Fetch
+            applyLanguage(currentLang); updateMenuItems(); initSlider(); initCursor(); 
             // Newsletter Popup Logic
             if(!sessionStorage.getItem('newsletterShown')) {
                 setTimeout(() => { document.getElementById('newsletter-modal').classList.add('active'); sessionStorage.setItem('newsletterShown', 'true'); }, 5000);
@@ -621,7 +640,7 @@
             const res = products.filter(p => p.title_en.toLowerCase().includes(val.toLowerCase()) || p.title_ar.includes(val));
             document.getElementById('search-results').innerHTML = res.map(p => `
                 <div class="flex gap-4 cursor-pointer" onclick="toggleSearch(); openProductModal(${p.id})">
-                    <img src="${Array.isArray(p.images) ? p.images[0] : p.image}" class="w-16 h-16 object-cover border">
+                    <img src="${getMainImage(p)}" class="w-16 h-16 object-cover border" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';">
                     <div><h4 class="font-bold text-sm">${p.title_en}</h4><p class="text-xs">${p.price} EGP</p></div>
                 </div>
             `).join('');
@@ -635,11 +654,13 @@
             const grid = document.getElementById('product-grid');
             const filtered = cat === 'all' ? products : products.filter(p => p.category === cat);
             
-            grid.innerHTML = filtered.map(p => `
+            grid.innerHTML = filtered.map(p => {
+                console.log('Rendering product:', p);
+                return `
                 <div class="group cursor-pointer fade-in-up relative" onclick="openProductModal(${p.id})">
                     <button onclick="event.stopPropagation(); toggleWishlistItem(${p.id})" class="absolute top-3 right-3 z-20 text-xl ${wishlist.includes(p.id) ? 'text-brandGold' : 'text-white'} hover:scale-110 transition"><i class="${wishlist.includes(p.id) ? 'fas' : 'far'} fa-heart shadow-md"></i></button>
                     <div class="relative overflow-hidden mb-3 aspect-[3/4] bg-[#F7F5F2]">
-                        <img loading="lazy" src="${Array.isArray(p.images) ? p.images[0] : p.image}" class="w-full h-full object-cover transition duration-700 group-hover:scale-105 reveal-img">
+                        <img loading="lazy" src="${getMainImage(p)}" class="w-full h-full object-cover transition duration-700 group-hover:scale-105 reveal-img" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';">
                         <div class="absolute inset-0 flex items-center justify-center bg-black/10 opacity-0 group-hover:opacity-100 transition-opacity"><span class="text-white font-serif italic text-xl">View</span></div>
                     </div>
                     <div class="flex justify-between items-start">
@@ -647,7 +668,42 @@
                         <span class="font-serif text-sm text-brandDark">${p.price} EGP</span>
                     </div>
                 </div>
-            `).join('');
+            `}).join('');
+        }
+
+        // *** ROBUST IMAGE EXTRACTOR (THE FIX) ***
+        function getMainImage(product) {
+            // 1. Try the 'images' array (New System)
+            if (product.images) {
+                // If it's already an array
+                if (Array.isArray(product.images) && product.images.length > 0) {
+                    return product.images[0];
+                }
+                // If it's a string looking like JSON
+                if (typeof product.images === 'string') {
+                    try {
+                        const parsed = JSON.parse(product.images);
+                        if (parsed.length > 0) return parsed[0];
+                    } catch (e) {
+                        return product.images; // Return as string if parse fails
+                    }
+                }
+            }
+            // 2. Try 'image' field (Old System / Backup)
+            if (product.image) return product.image;
+            // 3. Last resort placeholder
+            return 'https://via.placeholder.com/300?text=No+Image';
+        }
+
+        function getAllImages(product) {
+             if (product.images) {
+                if (Array.isArray(product.images)) return product.images;
+                if (typeof product.images === 'string') {
+                    try { return JSON.parse(product.images); } catch(e) { return [product.images]; }
+                }
+            }
+            if (product.image) return [product.image];
+            return ['https://via.placeholder.com/300?text=No+Image'];
         }
 
         // Track Order Logic
@@ -710,7 +766,7 @@
         window.openCheckout = () => {
             if(cart.length === 0) return showToast("Cart is empty");
             const list = document.getElementById('checkout-items-list');
-            list.innerHTML = cart.map(i => `<div class="flex gap-4 items-center border-b border-brandBorder pb-4"><div class="relative"><img src="${i.image}" class="w-16 h-16 object-cover border border-brandBorder"><span class="absolute -top-2 -right-2 bg-gray-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">${i.qty}</span></div><div class="flex-1"><p class="text-sm font-bold text-brandBlack font-serif">${currentLang==='ar'?i.title_ar:i.title_en}</p><p class="text-xs text-brandGray font-sans">${i.material} | ${i.price} EGP</p></div></div>`).join('');
+            list.innerHTML = cart.map(i => `<div class="flex gap-4 items-center border-b border-brandBorder pb-4"><div class="relative"><img src="${i.image}" class="w-16 h-16 object-cover border border-brandBorder" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';"><span class="absolute -top-2 -right-2 bg-gray-600 text-white text-[10px] w-5 h-5 flex items-center justify-center rounded-full">${i.qty}</span></div><div class="flex-1"><p class="text-sm font-bold text-brandBlack font-serif">${currentLang==='ar'?i.title_ar:i.title_en}</p><p class="text-xs text-brandGray font-sans">${i.material} | ${i.price} EGP</p></div></div>`).join('');
             if(isRoyal) list.innerHTML += `<div class="flex gap-4 items-center border-b border-brandBorder pb-4"><div class="w-16 h-16 bg-brandDark flex items-center justify-center text-brandGold"><i class="fas fa-crown text-2xl"></i></div><div class="flex-1"><p class="text-sm font-bold text-brandBlack font-serif">Royal Packaging</p><p class="text-xs text-brandGray font-sans">250 EGP</p></div></div>`;
             updateCheckoutTotal(); openModal('checkout-modal');
         };
@@ -780,8 +836,8 @@
                             <thead><tr><th>Image</th><th>Name</th><th>Price</th><th>Action</th></tr></thead>
                             <tbody id="admin-prod-list-body">
                                 ${products.map(p => {
-                                    let img = Array.isArray(p.images) ? p.images[0] : (p.image || p.img);
-                                    return `<tr class="admin-row"><td><img src="${img}"></td><td>${p.title_en}</td><td>${p.price}</td><td><span onclick="editProduct(${p.id})" class="action-link edit-link">EDIT</span><span onclick="deleteProd(${p.id})" class="action-link del-link">DELETE</span></td></tr>`;
+                                    let img = getMainImage(p);
+                                    return `<tr class="admin-row"><td><img src="${img}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';"></td><td>${p.title_en}</td><td>${p.price}</td><td><span onclick="editProduct(${p.id})" class="action-link edit-link">EDIT</span><span onclick="deleteProd(${p.id})" class="action-link del-link">DELETE</span></td></tr>`;
                                 }).join('')}
                             </tbody>
                         </table>
@@ -847,7 +903,8 @@
             }
         }
 
-        function saveProduct() {
+        // *** UPDATED SAVE FUNCTION: Sends to Supabase ***
+        async function saveProduct() {
             // Priority: Uploaded files > URL input
             let imgs = uploadedFiles.length > 0 ? uploadedFiles : document.getElementById('adm-img-url').value.split(',').map(s=>s.trim()).filter(s=>s!=="");
             let vid = uploadedVideo ? uploadedVideo : document.getElementById('adm-video-url').value;
@@ -856,13 +913,12 @@
             if(imgs.length === 0 && !editingProductId) imgs = ["https://via.placeholder.com/300"];
 
             const newP = { 
-                id: editingProductId || Date.now(), 
                 title_en: document.getElementById('adm-title-en').value, 
                 title_ar: document.getElementById('adm-title-ar').value, 
                 price: Number(document.getElementById('adm-price').value), 
                 category: document.getElementById('adm-cat').value, 
                 images: imgs, 
-                image: imgs[0], // Backwards compatibility
+                // image: imgs[0], // Backwards compatibility
                 video: vid,
                 headline: document.getElementById('adm-head').value, 
                 desc_en: document.getElementById('adm-desc').value, 
@@ -872,25 +928,54 @@
             if(!newP.title_en) return showToast("Missing Title");
             
             if(editingProductId) {
-                const index = products.findIndex(p => p.id === editingProductId);
-                if(index !== -1) {
-                    if (imgs.length === 0) { newP.images = products[index].images; newP.image = products[index].image; }
-                    if (!vid) newP.video = products[index].video;
-                    products[index] = newP;
+                // UPDATE IN SUPABASE
+                const { error } = await supabaseClient
+                    .from('products')
+                    .update(newP)
+                    .eq('id', editingProductId);
+
+                if (!error) {
+                    showToast("Updated in Supabase");
+                } else {
+                    console.error(error);
+                    showToast("Error updating", "error");
                 }
                 editingProductId = null;
-            } else { products.push(newP); }
-            
-            try {
-                localStorage.setItem('nader_products', JSON.stringify(products)); 
-                renderAdminDashboard('products'); renderProducts(); showToast("Saved Successfully");
-                uploadedFiles = []; uploadedVideo = null;
-            } catch(e) {
-                showToast("Storage Full! Use smaller images.", "error");
+            } else { 
+                // INSERT INTO SUPABASE (ID is auto generated)
+                const { error } = await supabaseClient
+                    .from('products')
+                    .insert([newP]);
+
+                if (!error) {
+                    showToast("Saved to Supabase");
+                } else {
+                    console.error(error);
+                    showToast("Error saving", "error");
+                }
             }
+            
+            uploadedFiles = []; uploadedVideo = null;
+            fetchProductsFromSupabase(); // REFRESH DATA
         }
 
-        function deleteProd(id) { if(confirm("Delete?")) { products=products.filter(p=>p.id!==id); localStorage.setItem('nader_products', JSON.stringify(products)); renderAdminDashboard('products'); renderProducts(); } }
+        // *** UPDATED DELETE FUNCTION: Deletes from Supabase ***
+        async function deleteProd(id) { 
+            if(confirm("Delete?")) { 
+                const { error } = await supabaseClient
+                    .from('products')
+                    .delete()
+                    .eq('id', id);
+
+                if(!error) {
+                    showToast("Deleted");
+                    fetchProductsFromSupabase();
+                } else {
+                    console.error(error);
+                }
+            } 
+        }
+
         function editProduct(id) {
             editingProductId = id;
             const p = products.find(p => p.id === id);
@@ -902,7 +987,9 @@
                 document.getElementById('adm-cat').value = p.category;
                 document.getElementById('adm-head').value = p.headline || '';
                 document.getElementById('adm-desc').value = p.desc_en;
-                if(p.images && p.images[0].startsWith('http')) document.getElementById('adm-img-url').value = p.images.join(', ');
+                // Pre-fill images
+                const imgs = getAllImages(p);
+                if(imgs.length > 0 && imgs[0].startsWith('http')) document.getElementById('adm-img-url').value = imgs.join(', ');
             }, 50);
         }
         
@@ -911,8 +998,8 @@
             const filtered = products.filter(p => p.title_en.toLowerCase().includes(term));
             const tbody = document.getElementById('admin-prod-list-body');
             tbody.innerHTML = filtered.map(p => {
-                 const img = Array.isArray(p.images) ? p.images[0] : (p.image || p.img);
-                 return `<tr class="admin-row"><td><img src="${img}"></td><td>${p.title_en}</td><td>${p.price}</td><td><span onclick="editProduct(${p.id})" class="action-link edit-link">EDIT</span><span onclick="deleteProd(${p.id})" class="action-link del-link">DELETE</span></td></tr>`;
+                 const img = getMainImage(p);
+                 return `<tr class="admin-row"><td><img src="${img}" onerror="this.onerror=null;this.src='https://via.placeholder.com/300?text=No+Image';"></td><td>${p.title_en}</td><td>${p.price}</td><td><span onclick="editProduct(${p.id})" class="action-link edit-link">EDIT</span><span onclick="deleteProd(${p.id})" class="action-link del-link">DELETE</span></td></tr>`;
             }).join('');
         }
 
@@ -980,7 +1067,7 @@
             reader.onload = (e) => {
                 try {
                     const data = JSON.parse(e.target.result);
-                    if(data.products) localStorage.setItem('nader_products', JSON.stringify(data.products));
+                    // For static items, local storage is fine
                     if(data.menuItems) localStorage.setItem('nader_menu', JSON.stringify(data.menuItems));
                     if(data.faqs) localStorage.setItem('nader_faqs', JSON.stringify(data.faqs));
                     if(data.reviews) localStorage.setItem('nader_reviews', JSON.stringify(data.reviews));
@@ -1037,11 +1124,8 @@
             if(!p) return;
             currentProduct = p; currentQty = 1;
             
-            // Get Image(s)
-            let imgs = [];
-            if(Array.isArray(p.images) && p.images.length > 0) imgs = p.images;
-            else if(p.image) imgs = [p.image];
-            else if(p.img) imgs = [p.img];
+            // Get Image(s) using new robust function
+            let imgs = getAllImages(p);
 
             // Set Main Image
             const mainImg = document.getElementById('pm-img');
@@ -1095,7 +1179,7 @@
                 relatedContainer.innerHTML = related.map(rel => `
                     <div class="cursor-pointer group" onclick="openProductModal(${rel.id})">
                         <div class="relative overflow-hidden mb-2 aspect-[3/4] bg-gray-100">
-                             <img src="${Array.isArray(rel.images) ? rel.images[0] : rel.image}" class="w-full h-full object-cover">
+                             <img src="${getMainImage(rel)}" class="w-full h-full object-cover">
                         </div>
                         <h4 class="text-xs font-bold text-brandBlack">${currentLang==='ar'?rel.title_ar:rel.title_en}</h4>
                         <p class="text-[10px] text-brandGray">${rel.price} EGP</p>
@@ -1143,7 +1227,7 @@
             document.getElementById('wish-count').innerText = wishlist.length;
             document.getElementById('wishlist-items').innerHTML = wishlist.length ? wishlist.map(id => {
                 const p = products.find(x => x.id === id);
-                return `<div class="flex gap-4 border-b border-brandBorder pb-4 mb-2"><img src="${Array.isArray(p.images) ? p.images[0] : p.image}" class="w-16 h-16 object-cover border border-brandBorder"><div class="text-xs flex-1"><p class="font-bold text-brandBlack">${currentLang==='ar'?p.title_ar:p.title_en}</p><p class="text-brandGray">${p.price} EGP</p><button onclick="toggleWishlistItem(${p.id})" class="text-red-500 mt-2 hover:underline">Remove</button></div></div>`;
+                return `<div class="flex gap-4 border-b border-brandBorder pb-4 mb-2"><img src="${getMainImage(p)}" class="w-16 h-16 object-cover border border-brandBorder"><div class="text-xs flex-1"><p class="font-bold text-brandBlack">${currentLang==='ar'?p.title_ar:p.title_en}</p><p class="text-brandGray">${p.price} EGP</p><button onclick="toggleWishlistItem(${p.id})" class="text-red-500 mt-2 hover:underline">Remove</button></div></div>`;
             }).join('') : '<p class="text-center text-xs mt-10">Wishlist is empty</p>';
         }
 
