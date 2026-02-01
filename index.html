@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" dir="ltr"> <!-- Removed scroll-smooth to fix lag -->
+<html lang="en" dir="ltr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
@@ -25,40 +25,51 @@
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
     <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    colors: { 
-                        brandBlack: '#1A1A1A', 
-                        brandDark: '#2B2B2B',  
-                        brandGold: '#C89D54',  
-                        brandLight: '#FDFBF8', 
-                        brandGray: '#4F4F4F',  
-                        brandBorder: '#E5E0D8' 
-                    },
-                    fontFamily: { 
-                        sans: ['Montserrat', 'sans-serif'], 
-                        serif: ['Playfair Display', 'serif'], 
-                        amiri: ['Amiri', 'serif'] 
+        window.addEventListener('load', function() {
+            if (typeof tailwind !== 'undefined') {
+                tailwind.config = {
+                    theme: {
+                        extend: {
+                            colors: { 
+                                brandBlack: '#1A1A1A', 
+                                brandDark: '#2B2B2B',  
+                                brandGold: '#C89D54',  
+                                brandLight: '#FDFBF8', 
+                                brandGray: '#4F4F4F',  
+                                brandBorder: '#E5E0D8' 
+                            },
+                            fontFamily: { 
+                                sans: ['Montserrat', 'sans-serif'], 
+                                serif: ['Playfair Display', 'serif'], 
+                                amiri: ['Amiri', 'serif'] 
+                            },
+                            screens: {
+                                'xs': '375px', // For small phones
+                            }
+                        }
                     }
-                }
+                };
             }
-        };
+        });
     </script>
 
     <style>
         /* --- CORE STYLES --- */
-        body { overflow-x: hidden; background-color: #FDFBF8; font-family: 'Montserrat', sans-serif; color: #4F4F4F; cursor: none; }
+        body { overflow-x: hidden; background-color: #FDFBF8; font-family: 'Montserrat', sans-serif; color: #4F4F4F; cursor: auto; -webkit-tap-highlight-color: transparent; }
         html[dir="rtl"] body { font-family: 'Amiri', serif; }
         
         h1, h2, h3, .font-serif { font-family: 'Playfair Display', serif; }
         .modal-content, .reveal-img, #marquee-text { will-change: transform; transform: translateZ(0); }
         
-        /* Cursor (Optimized) */
-        .cursor-dot { width: 5px; height: 5px; background: #C89D54; position: fixed; top: 0; left: 0; border-radius: 50%; pointer-events: none; z-index: 99999; will-change: transform; }
-        .cursor-outline { width: 25px; height: 25px; border: 1px solid #C89D54; position: fixed; top: 0; left: 0; border-radius: 50%; pointer-events: none; z-index: 99998; transition: transform 0.1s; will-change: transform; }
-        body.hovering .cursor-outline { transform: scale(1.5); background: rgba(200, 157, 84, 0.1); border-color: transparent; }
-        @media (hover: none) { .cursor-dot, .cursor-outline { display: none; } body { cursor: auto; } }
+        /* Cursor Styles - Initially hidden, shown only on desktop via Media Query */
+        .cursor-dot, .cursor-outline { display: none; pointer-events: none; position: fixed; top: 0; left: 0; z-index: 99999; border-radius: 50%; }
+        
+        @media (hover: hover) and (pointer: fine) {
+            body { cursor: none; } /* Hide default cursor only on desktop */
+            .cursor-dot { display: block; width: 5px; height: 5px; background: #C89D54; }
+            .cursor-outline { display: block; width: 25px; height: 25px; border: 1px solid #C89D54; transition: transform 0.15s ease-out; }
+            body.hovering .cursor-outline { transform: scale(1.5); background: rgba(200, 157, 84, 0.1); border-color: transparent; }
+        }
 
         /* Marquee */
         #marquee-text { animation: marquee-scroll 50s linear infinite; will-change: transform; }
@@ -70,23 +81,30 @@
         .hero-slide img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
 
         /* Modals */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(26, 26, 26, 0.6); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; display: flex; align-items: center; justify-content: center; }
+        .modal-overlay { position: fixed; inset: 0; background: rgba(26, 26, 26, 0.8); z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s ease; display: flex; align-items: center; justify-content: center; }
         .modal-overlay.active { opacity: 1; visibility: visible; }
         .modal-content { background: #FDFBF8; transform: scale(0.98); transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1); }
         .modal-overlay.active .modal-content { transform: scale(1); }
         
-        /* Fixed Slide Panels */
+        /* Mobile Scroll Fixes */
+        .modal-overlay { padding: 0; }
+        @media (max-width: 768px) {
+            .modal-content { max-height: 100dvh; overflow-y: auto; width: 100% !important; height: 100% !important; border-radius: 0; }
+        }
+
+        /* Fixed Slide Panels (Cart & Menu) */
         .slide-panel { 
             position: fixed; top: 0; bottom: 0; z-index: 2000; 
             background: #FDFBF8; 
             transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
             will-change: transform;
+            height: 100dvh; /* Fix for mobile browser bars */
         }
         
         #cart-sidebar, #wishlist-sidebar { right: 0; left: auto; width: 450px; max-width: 100%; border-left: 1px solid #E5E0D8; transform: translateX(100%); }
         #cart-sidebar.open, #wishlist-sidebar.open { transform: translateX(0) !important; }
 
-        #side-menu { width: 400px; max-width: 80%; }
+        #side-menu { width: 400px; max-width: 85%; }
         html[dir="ltr"] #side-menu { left: 0; right: auto; transform: translateX(-100%); }
         html[dir="rtl"] #side-menu { right: 0; left: auto; transform: translateX(100%); }
         #side-menu.open { transform: translateX(0) !important; }
@@ -101,7 +119,7 @@
         #search-overlay.active { opacity: 1; pointer-events: auto; }
 
         /* Inputs & Accordions */
-        .nj-input { width: 100%; padding: 12px; border: 1px solid #E5E0D8; font-size: 13px; outline: none; transition: 0.3s; background: #fff; color: #2B2B2B; margin-bottom: 10px; }
+        .nj-input { width: 100%; padding: 12px; border: 1px solid #E5E0D8; font-size: 13px; outline: none; transition: 0.3s; background: #fff; color: #2B2B2B; margin-bottom: 10px; border-radius: 0; -webkit-appearance: none; }
         .nj-input:focus { border-color: #C89D54; }
         
         .accordion-item { border-bottom: 1px solid #E5E0D8; }
@@ -111,7 +129,7 @@
         .accordion-item.active .accordion-icon { transform: rotate(180deg); }
 
         .qty-selector { display: flex; align-items: center; border: 1px solid #E5E0D8; width: fit-content; }
-        .qty-btn { padding: 8px 16px; cursor: pointer; transition: 0.2s; }
+        .qty-btn { padding: 8px 16px; cursor: pointer; transition: 0.2s; user-select: none; }
         .qty-btn:hover { background: #f5f5f5; }
         .qty-display { padding: 8px 12px; font-size: 14px; font-weight: 500; min-width: 40px; text-align: center; }
         
@@ -120,7 +138,7 @@
         .mat-btn.active { background: #1A1A1A; color: white; border-color: #1A1A1A; }
 
         /* Category Filter */
-        .cat-filter-btn { padding: 8px 16px; border: 1px solid transparent; border-radius: 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; color: #666; cursor: pointer; }
+        .cat-filter-btn { padding: 8px 16px; border: 1px solid transparent; border-radius: 20px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; transition: 0.3s; color: #666; cursor: pointer; white-space: nowrap; }
         .cat-filter-btn:hover, .cat-filter-btn.active { border-color: #C89D54; color: #1A1A1A; font-weight: 600; }
 
         /* Admin Styles */
@@ -174,10 +192,17 @@
             .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid #f0f0f0; padding: 15px; flex-direction: row; gap: 15px; overflow-x: auto; }
             .admin-content { flex-direction: column; }
             .admin-panel-left, .admin-panel-right { width: 100%; border-right: none; padding: 20px; }
+            
+            /* Navbar Mobile Fix */
+            #navbar { padding: 16px !important; top: 0 !important; background-color: rgba(253, 251, 248, 0.95); }
+            
+            /* Cart Mobile Fix */
+            #cart-sidebar { width: 100%; z-index: 9999; }
+            #cart-items { padding-bottom: 150px; } /* Prevent items hiding behind checkout */
         }
 
         .no-scrollbar::-webkit-scrollbar { display: none; }
-        #toast.show { transform: translate(-50%, -20px) !important; opacity: 1 !important; }
+        #toast.show { transform: translate(-50%, 20px) !important; opacity: 1 !important; top: 20px; bottom: auto; }
     </style>
 </head>
 <body>
@@ -195,20 +220,20 @@
     </div>
 
     <!-- UI Elements -->
-    <div class="cursor-dot hidden md:block"></div>
-    <div class="cursor-outline hidden md:block"></div>
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
     <div id="preloader" class="fixed inset-0 bg-brandLight z-[10000] flex flex-col justify-center items-center transition-opacity duration-500">
         <h1 class="text-4xl md:text-6xl font-serif italic text-brandBlack animate-pulse">Nader Jewelry</h1>
     </div>
-    <div id="toast" class="fixed bottom-10 left-1/2 -translate-x-1/2 z-[11000] bg-brandBlack text-brandGold px-8 py-4 rounded shadow-2xl flex items-center gap-3 transform translate-y-24 opacity-0 transition-all duration-500 pointer-events-none border border-brandGold/30">
+    <div id="toast" class="fixed top-5 left-1/2 -translate-x-1/2 z-[11000] bg-brandBlack text-brandGold px-8 py-4 rounded shadow-2xl flex items-center gap-3 transform -translate-y-24 opacity-0 transition-all duration-500 pointer-events-none border border-brandGold/30">
         <i class="fas fa-check-circle"></i><span class="text-xs uppercase tracking-widest font-bold" id="toast-msg">Added</span>
     </div>
 
     <!-- Newsletter Popup -->
     <div id="newsletter-modal" class="modal-overlay">
-        <div class="bg-brandLight p-12 max-w-lg w-full relative modal-content shadow-2xl text-center">
-            <button onclick="closeModal('newsletter-modal')" class="absolute top-6 right-6 text-xl hover:text-brandGold">&times;</button>
-            <h3 class="font-serif italic text-3xl mb-4 text-brandBlack">Join the Inner Circle</h3>
+        <div class="bg-brandLight p-8 md:p-12 max-w-lg w-full relative modal-content shadow-2xl text-center m-4">
+            <button onclick="closeModal('newsletter-modal')" class="absolute top-4 right-4 text-xl hover:text-brandGold p-2">&times;</button>
+            <h3 class="font-serif italic text-2xl md:text-3xl mb-4 text-brandBlack">Join the Inner Circle</h3>
             <p class="text-sm text-brandGray mb-6">Be the first to know about new collections and exclusive events.</p>
             <input type="email" placeholder="Email Address" class="nj-input text-center">
             <button onclick="closeModal('newsletter-modal'); showToast('Subscribed!')" class="w-full bg-brandDark text-white py-4 text-xs uppercase tracking-widest hover:bg-brandGold transition font-bold">Subscribe</button>
@@ -216,25 +241,25 @@
     </div>
 
     <!-- Navbar -->
-    <nav class="fixed w-full z-50 px-6 md:px-12 py-6 top-8 flex justify-between items-center bg-brandLight/20 backdrop-blur-md transition-all duration-300 hover:bg-brandLight/95 border-b border-transparent hover:border-brandBorder" id="navbar">
-        <div class="flex gap-8 text-xs font-bold tracking-widest uppercase items-center text-brandDark">
-            <button onclick="toggleMenu()" class="hover-trigger flex items-center gap-2 group hover:text-brandGold transition">
+    <nav class="fixed w-full z-50 px-4 md:px-12 py-4 md:py-6 top-0 md:top-8 flex justify-between items-center transition-all duration-300 border-b border-transparent hover:border-brandBorder" id="navbar">
+        <div class="flex gap-4 md:gap-8 text-xs font-bold tracking-widest uppercase items-center text-brandDark">
+            <button onclick="toggleMenu()" class="hover-trigger flex items-center gap-2 group hover:text-brandGold transition p-1">
                 <i class="fas fa-bars text-lg"></i> 
                 <span class="hidden md:inline" data-i18n="menu">Menu</span>
             </button>
-            <button onclick="toggleSearch()" class="hover-trigger flex items-center gap-2 group hover:text-brandGold transition">
+            <button onclick="toggleSearch()" class="hover-trigger flex items-center gap-2 group hover:text-brandGold transition p-1">
                 <i class="fas fa-search text-lg"></i>
             </button>
             <button onclick="toggleLanguage()" class="hover-trigger font-bold px-2 hover:text-brandGold transition" id="lang-btn">AR</button>
         </div>
-        <a href="#" class="text-2xl md:text-3xl font-serif italic font-bold tracking-wide absolute left-1/2 -translate-x-1/2 hover-trigger text-brandBlack">Nader Jewelry</a>
-        <div class="flex gap-8 items-center text-brandDark">
-            <button class="relative hover-trigger hover:text-brandGold transition" onclick="handleAuthClick()"><i class="fas fa-user text-lg" id="auth-icon"></i></button>
-            <button class="relative hover-trigger hover:text-brandGold transition" onclick="toggleWishlist()">
+        <a href="#" class="text-xl md:text-3xl font-serif italic font-bold tracking-wide absolute left-1/2 -translate-x-1/2 hover-trigger text-brandBlack">Nader Jewelry</a>
+        <div class="flex gap-4 md:gap-8 items-center text-brandDark">
+            <button class="relative hover-trigger hover:text-brandGold transition p-1" onclick="handleAuthClick()"><i class="fas fa-user text-lg" id="auth-icon"></i></button>
+            <button class="relative hover-trigger hover:text-brandGold transition p-1" onclick="toggleWishlist()">
                 <i class="far fa-heart text-lg"></i>
                 <span id="wish-count" class="absolute -top-1 -right-2 text-[9px] bg-brandGold text-white w-4 h-4 rounded-full flex items-center justify-center font-bold opacity-0 transition-opacity">0</span>
             </button>
-            <button class="relative hover-trigger hover:text-brandGold transition" onclick="toggleCart()">
+            <button class="relative hover-trigger hover:text-brandGold transition p-1" onclick="toggleCart()">
                 <i class="fas fa-shopping-bag text-lg"></i>
                 <span id="cart-count" class="absolute -top-1 -right-2 text-[9px] bg-brandDark text-white w-4 h-4 rounded-full flex items-center justify-center font-bold opacity-0 transition-opacity">0</span>
             </button>
@@ -243,13 +268,13 @@
 
     <!-- Side Menu -->
     <div id="menu-overlay" class="modal-overlay z-[90]" onclick="toggleMenu()"></div>
-    <div id="side-menu" class="slide-panel shadow-2xl flex flex-col p-12">
-        <div class="flex justify-between items-center mb-16">
-            <span class="text-3xl font-serif italic text-brandBlack" data-i18n="menu">Menu</span>
-            <button onclick="toggleMenu()" class="text-3xl hover:text-brandGold hover-trigger text-brandDark">&times;</button>
+    <div id="side-menu" class="slide-panel shadow-2xl flex flex-col p-8 md:p-12">
+        <div class="flex justify-between items-center mb-10 md:mb-16">
+            <span class="text-2xl md:text-3xl font-serif italic text-brandBlack" data-i18n="menu">Menu</span>
+            <button onclick="toggleMenu()" class="text-3xl hover:text-brandGold hover-trigger text-brandDark p-2">&times;</button>
         </div>
-        <ul id="menu-items-container" class="space-y-6 text-xl font-serif text-brandDark"></ul>
-        <ul class="space-y-6 text-xl font-serif text-brandDark mt-8 border-t border-brandBorder pt-8 hidden" id="admin-link">
+        <ul id="menu-items-container" class="space-y-6 text-lg md:text-xl font-serif text-brandDark"></ul>
+        <ul class="space-y-6 text-lg md:text-xl font-serif text-brandDark mt-8 border-t border-brandBorder pt-8 hidden" id="admin-link">
              <li><button onclick="toggleMenu(); openModal('admin-dashboard')" class="hover:text-brandGold hover-trigger w-full text-left rtl:text-right text-brandGold font-bold italic" data-i18n="adminDash">Admin Dashboard</button></li>
              <li><button onclick="openModal('tracking-modal')" class="hover:text-brandGold hover-trigger w-full text-left rtl:text-right">Track Order</button></li>
              <li><button onclick="logout()" class="hover:text-red-500 hover-trigger w-full text-left rtl:text-right text-sm text-gray-500 mt-4">Sign Out</button></li>
@@ -257,7 +282,7 @@
     </div>
 
     <!-- Hero Header with Slider -->
-    <header class="relative w-full h-[95vh] overflow-hidden flex items-center justify-center bg-brandLight">
+    <header class="relative w-full h-[90vh] md:h-[95vh] overflow-hidden flex items-center justify-center bg-brandLight">
         <div id="hero-slider" class="absolute inset-0 z-0">
             <!-- Slides injected by JS -->
         </div>
@@ -272,7 +297,7 @@
     </header>
 
     <!-- Shop -->
-    <section id="shop" class="relative z-10 py-24 px-6 md:px-12 max-w-[1600px] mx-auto bg-brandLight">
+    <section id="shop" class="relative z-10 py-16 md:py-24 px-4 md:px-12 max-w-[1600px] mx-auto bg-brandLight">
         <div class="flex flex-col md:flex-row justify-between items-end mb-12 border-b border-brandBorder pb-8">
             <div>
                 <h2 class="text-3xl md:text-4xl font-serif italic text-brandBlack mb-3" data-i18n="shopTitle">Curated Works</h2>
@@ -281,7 +306,7 @@
         </div>
         
         <!-- Category Filter -->
-        <div class="flex flex-wrap gap-4 mb-16 justify-center">
+        <div class="flex flex-wrap gap-2 md:gap-4 mb-16 justify-center overflow-x-auto pb-2 no-scrollbar">
             <button onclick="filterProducts('all')" class="cat-filter-btn active" data-cat="all">All</button>
             <button onclick="filterProducts('Necklace')" class="cat-filter-btn" data-cat="Necklace">Necklaces</button>
             <button onclick="filterProducts('Ring')" class="cat-filter-btn" data-cat="Ring">Rings</button>
@@ -289,11 +314,11 @@
             <button onclick="filterProducts('Hand Chain')" class="cat-filter-btn" data-cat="Hand Chain">Hand Chains</button>
         </div>
 
-        <div id="product-grid" class="grid grid-cols-1 md:grid-cols-3 gap-12"></div>
+        <div id="product-grid" class="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12"></div>
     </section>
 
     <!-- REVIEWS SECTION -->
-    <section class="bg-[#FDFBF8] py-24 px-6 relative z-10 border-t border-brandBorder">
+    <section class="bg-[#FDFBF8] py-16 md:py-24 px-6 relative z-10 border-t border-brandBorder">
         <div class="max-w-6xl mx-auto">
             <h3 class="text-3xl font-serif italic text-center mb-16 text-brandBlack" data-i18n="happyClients">Happy Clients</h3>
             <div id="reviews-grid" class="grid grid-cols-1 md:grid-cols-3 gap-10"></div>
@@ -322,7 +347,7 @@
     </section>
 
     <!-- Footer -->
-    <footer class="bg-[#FDFBF8] text-brandDark py-20 px-6 border-t border-brandBorder">
+    <footer class="bg-[#FDFBF8] text-brandDark py-12 md:py-20 px-6 border-t border-brandBorder">
         <div class="max-w-[1400px] mx-auto grid grid-cols-1 md:grid-cols-4 gap-12">
             <div><h3 class="font-serif italic text-2xl mb-6 text-brandBlack">Nader Jewelry</h3><p class="text-xs text-brandGray leading-relaxed" data-i18n="footerDesc">Handcrafted luxury pieces from Cairo since 1985.</p></div>
             <div>
@@ -350,7 +375,7 @@
     </footer>
 
     <!-- WhatsApp Button -->
-    <a href="https://wa.me/201221227073" target="_blank" class="whatsapp-float hover:scale-110 transition"><i class="fab fa-whatsapp"></i></a>
+    <a href="https://wa.me/201221227073" target="_blank" class="whatsapp-float hover:scale-110 transition z-[100]"><i class="fab fa-whatsapp"></i></a>
 
     <!-- --- MODALS --- -->
 
@@ -366,7 +391,7 @@
 
     <!-- Tracking Modal -->
     <div id="tracking-modal" class="modal-overlay">
-        <div class="bg-brandLight p-10 max-w-md w-full relative modal-content shadow-2xl rounded text-center">
+        <div class="bg-brandLight p-8 md:p-10 max-w-md w-full relative modal-content shadow-2xl rounded text-center m-4">
             <button onclick="closeModal('tracking-modal')" class="absolute top-6 right-6 text-xl hover:text-brandGold">&times;</button>
             <h3 class="font-serif italic text-2xl mb-6 text-brandBlack">Track Your Order</h3>
             <div class="space-y-4">
@@ -381,24 +406,24 @@
     <!-- Product Modal (Gallery Enabled) -->
     <div id="product-modal" class="modal-overlay">
         <div class="bg-brandLight w-full h-full md:h-auto md:max-h-[95vh] md:max-w-6xl shadow-2xl flex flex-col md:flex-row overflow-hidden relative modal-content">
-            <button onclick="closeModal('product-modal')" class="absolute top-6 right-6 z-20 text-2xl hover:text-brandGold bg-brandLight/80 rounded-full p-2 w-10 h-10 flex items-center justify-center shadow-sm">&times;</button>
-            <div class="w-full md:w-1/2 h-[45vh] md:h-auto bg-[#F7F5F2] relative flex flex-col">
+            <button onclick="closeModal('product-modal')" class="absolute top-4 right-4 z-20 text-2xl hover:text-brandGold bg-brandLight/80 rounded-full p-2 w-10 h-10 flex items-center justify-center shadow-sm">&times;</button>
+            <div class="w-full md:w-1/2 h-[40vh] md:h-auto bg-[#F7F5F2] relative flex flex-col shrink-0">
                 <div class="flex-1 relative overflow-hidden">
                      <img id="pm-img" src="" class="w-full h-full object-cover">
                      <div id="pm-video-container" class="absolute inset-0 hidden bg-black flex items-center justify-center"></div>
                 </div>
                 <div id="pm-thumbnails" class="flex gap-2 p-4 overflow-x-auto bg-white border-t border-brandBorder hidden"></div>
             </div>
-            <div class="w-full md:w-1/2 p-8 md:p-12 overflow-y-auto flex flex-col bg-brandLight">
+            <div class="w-full md:w-1/2 p-6 md:p-12 overflow-y-auto flex flex-col bg-brandLight">
                 <span id="pm-cat" class="text-[10px] text-brandGold uppercase tracking-widest mb-2 font-bold">Category</span>
-                <h2 id="pm-title" class="text-3xl md:text-4xl font-serif italic text-brandBlack mb-2">Title</h2>
+                <h2 id="pm-title" class="text-2xl md:text-4xl font-serif italic text-brandBlack mb-2">Title</h2>
                 <p id="pm-headline" class="text-xs font-bold text-brandGold uppercase tracking-wider mb-4"></p>
                 <div class="flex items-end gap-3 mb-6"><p id="pm-price" class="text-xl font-serif text-brandDark font-bold">Price</p></div>
-                <div class="mb-6"><label class="block text-[10px] font-bold uppercase mb-2 text-brandDark">Material / الخامة</label><div class="flex gap-3"><button onclick="selectMaterial(this, 'Brass')" class="mat-btn active">Brass (نحاس)</button><button onclick="selectMaterial(this, 'Stainless')" class="mat-btn">Stainless (ستانلس)</button></div></div>
+                <div class="mb-6"><label class="block text-[10px] font-bold uppercase mb-2 text-brandDark">Material / الخامة</label><div class="flex gap-3 flex-wrap"><button onclick="selectMaterial(this, 'Brass')" class="mat-btn active">Brass (نحاس)</button><button onclick="selectMaterial(this, 'Stainless')" class="mat-btn">Stainless (ستانلس)</button></div></div>
                 <div class="mb-8"><label class="block text-[10px] font-bold uppercase mb-2 text-brandDark">Quantity / الكمية</label><div class="qty-selector mb-4"><div class="qty-btn" onclick="updateQty(-1)">-</div><div class="qty-display" id="pm-qty">1</div><div class="qty-btn" onclick="updateQty(1)">+</div></div><div class="flex flex-col gap-3"><button onclick="addToCart(false)" class="w-full border border-brandDark text-brandDark py-4 text-xs uppercase hover:bg-brandDark hover:text-white transition font-bold tracking-widest">Add to Cart</button><button onclick="addToCart(true)" class="w-full bg-brandDark text-white py-4 text-xs uppercase hover:bg-brandGold transition font-bold tracking-widest">Buy It Now</button></div></div>
                 <div class="accordion-section"><div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Description & Material <i class="fas fa-chevron-down accordion-icon transition"></i></div><div class="accordion-content" id="pm-desc"></div></div></div>
                 <!-- Related Products -->
-                <div class="mt-12 border-t border-brandBorder pt-8">
+                <div class="mt-12 border-t border-brandBorder pt-8 pb-8">
                     <h4 class="text-xs font-bold uppercase tracking-widest mb-6">You May Also Like</h4>
                     <div id="related-products" class="grid grid-cols-2 gap-4"></div>
                 </div>
@@ -410,7 +435,7 @@
     <div id="checkout-modal" class="modal-overlay">
         <div class="bg-brandLight w-full h-full md:h-auto md:max-h-[95vh] md:max-w-6xl flex flex-col md:flex-row relative modal-content shadow-2xl overflow-hidden">
             <button onclick="closeModal('checkout-modal')" class="absolute top-4 right-4 z-50 text-2xl text-brandGray hover:text-brandDark">&times;</button>
-            <div class="w-full md:w-3/5 p-10 md:p-14 overflow-y-auto bg-brandLight">
+            <div class="w-full md:w-3/5 p-6 md:p-14 overflow-y-auto bg-brandLight order-2 md:order-1">
                 <h2 class="text-3xl font-serif italic mb-8 text-brandBlack">Checkout</h2>
                 <div class="space-y-5">
                     <input type="email" id="co-email" placeholder="Email / البريد الإلكتروني" class="nj-input">
@@ -422,7 +447,7 @@
                     <button onclick="completeOrder()" id="final-btn" class="w-full bg-brandDark text-white py-5 mt-8 text-xs uppercase tracking-[0.2em] hover:bg-brandGold transition font-bold" data-i18n="placeOrder">Complete Order</button>
                 </div>
             </div>
-            <div class="w-full md:w-2/5 bg-[#F7F5F2] p-10 md:p-14 border-l border-brandBorder flex flex-col"><div id="checkout-items-list" class="flex-1 overflow-y-auto space-y-6 mb-8 pr-2"></div><div class="border-t border-brandBorder pt-8 space-y-4 text-sm text-brandGray font-medium"><div class="flex justify-between"><span>Subtotal</span><span class="font-bold text-brandDark" id="checkout-subtotal">0 EGP</span></div><div class="flex justify-between"><span>Shipping</span><span class="font-bold text-brandDark" id="checkout-shipping">--</span></div><div class="flex justify-between text-xl font-serif text-brandBlack border-t border-brandBorder pt-6 mt-4"><span data-i18n="total">Total</span><span class="font-bold" id="checkout-total">0 EGP</span></div></div></div>
+            <div class="w-full md:w-2/5 bg-[#F7F5F2] p-6 md:p-14 border-l border-brandBorder flex flex-col order-1 md:order-2"><div id="checkout-items-list" class="flex-1 overflow-y-auto space-y-6 mb-8 pr-2 max-h-[30vh] md:max-h-none"></div><div class="border-t border-brandBorder pt-8 space-y-4 text-sm text-brandGray font-medium"><div class="flex justify-between"><span>Subtotal</span><span class="font-bold text-brandDark" id="checkout-subtotal">0 EGP</span></div><div class="flex justify-between"><span>Shipping</span><span class="font-bold text-brandDark" id="checkout-shipping">--</span></div><div class="flex justify-between text-xl font-serif text-brandBlack border-t border-brandBorder pt-6 mt-4"><span data-i18n="total">Total</span><span class="font-bold" id="checkout-total">0 EGP</span></div></div></div>
         </div>
     </div>
 
@@ -450,12 +475,12 @@
     <!-- Cart Sidebar -->
     <div id="cart-overlay" class="modal-overlay z-[90]" onclick="toggleCart()"></div>
     <div id="cart-sidebar" class="slide-panel shadow-2xl flex flex-col">
-        <div class="p-8 border-b border-brandBorder flex justify-between items-center bg-brandLight">
+        <div class="p-6 md:p-8 border-b border-brandBorder flex justify-between items-center bg-brandLight">
             <span class="font-serif italic text-2xl text-brandBlack" data-i18n="cart">Your Cart</span>
-            <button onclick="toggleCart()" class="text-xl hover:text-red-500">&times;</button>
+            <button onclick="toggleCart()" class="text-xl hover:text-red-500 p-2">&times;</button>
         </div>
-        <div id="cart-items" class="flex-1 p-8 overflow-y-auto space-y-6"></div>
-        <div class="p-8 bg-brandDark text-white">
+        <div id="cart-items" class="flex-1 p-6 md:p-8 overflow-y-auto space-y-6"></div>
+        <div class="p-6 md:p-8 bg-brandDark text-white mt-auto sticky bottom-0 z-50">
             <div class="flex justify-between mb-6 text-lg font-serif italic text-brandGold pt-4 border-t border-white/10">
                 <span data-i18n="total">Total</span><span id="cart-total">EGP 0</span>
             </div>
@@ -466,29 +491,29 @@
     <!-- Wishlist Sidebar -->
     <div id="wishlist-overlay" class="modal-overlay z-[90]" onclick="toggleWishlist()"></div>
     <div id="wishlist-sidebar" class="slide-panel shadow-2xl flex flex-col border-l border-brandBorder">
-        <div class="p-8 border-b border-brandBorder flex justify-between items-center bg-brandLight">
+        <div class="p-6 md:p-8 border-b border-brandBorder flex justify-between items-center bg-brandLight">
             <span class="font-serif italic text-2xl text-brandBlack">Wishlist</span>
-            <button onclick="toggleWishlist()" class="text-xl hover:text-red-500">&times;</button>
+            <button onclick="toggleWishlist()" class="text-xl hover:text-red-500 p-2">&times;</button>
         </div>
-        <div id="wishlist-items" class="flex-1 p-8 overflow-y-auto space-y-6"></div>
+        <div id="wishlist-items" class="flex-1 p-6 md:p-8 overflow-y-auto space-y-6"></div>
     </div>
 
     <!-- Auth Modal -->
-    <div id="auth-modal" class="modal-overlay"><div class="bg-brandLight p-12 max-w-sm w-full relative modal-content shadow-2xl"><button onclick="closeModal('auth-modal')" class="absolute top-6 right-6 text-2xl hover:text-brandGold">&times;</button><div class="text-center mb-10"><h3 class="font-serif italic text-3xl text-brandBlack" data-i18n="welcome">Welcome</h3></div><div class="space-y-5"><input type="email" id="login-email" placeholder="E-mail" class="nj-input"><input type="password" id="login-pass" placeholder="Password" class="nj-input"><button onclick="login()" class="w-full bg-brandDark text-white py-4 text-xs uppercase tracking-widest hover:bg-brandGold transition font-bold" data-i18n="login">Login</button></div></div></div>
+    <div id="auth-modal" class="modal-overlay"><div class="bg-brandLight p-8 md:p-12 max-w-sm w-full relative modal-content shadow-2xl m-4"><button onclick="closeModal('auth-modal')" class="absolute top-6 right-6 text-2xl hover:text-brandGold">&times;</button><div class="text-center mb-10"><h3 class="font-serif italic text-3xl text-brandBlack" data-i18n="welcome">Welcome</h3></div><div class="space-y-5"><input type="email" id="login-email" placeholder="E-mail" class="nj-input"><input type="password" id="login-pass" placeholder="Password" class="nj-input"><button onclick="login()" class="w-full bg-brandDark text-white py-4 text-xs uppercase tracking-widest hover:bg-brandGold transition font-bold" data-i18n="login">Login</button></div></div></div>
     
     <!-- Success Modal -->
-    <div id="success-modal" class="modal-overlay"><div class="bg-brandLight p-16 max-w-md w-full text-center modal-content"><i class="fas fa-check-circle text-6xl text-brandGold mb-6"></i><h3 class="font-serif italic text-3xl mb-4 text-brandBlack">Confirmed</h3><p class="text-sm text-brandGray mb-10 font-sans">Order placed successfully.</p><button onclick="closeModal('success-modal')" class="w-full bg-brandDark text-white py-4 text-xs uppercase hover:bg-brandGold transition font-bold">Close</button></div></div>
+    <div id="success-modal" class="modal-overlay"><div class="bg-brandLight p-16 max-w-md w-full text-center modal-content m-4"><i class="fas fa-check-circle text-6xl text-brandGold mb-6"></i><h3 class="font-serif italic text-3xl mb-4 text-brandBlack">Confirmed</h3><p class="text-sm text-brandGray mb-10 font-sans">Order placed successfully.</p><button onclick="closeModal('success-modal')" class="w-full bg-brandDark text-white py-4 text-xs uppercase hover:bg-brandGold transition font-bold">Close</button></div></div>
 
     <!-- Royal Video Modal -->
     <div id="royal-video-modal" class="modal-overlay">
         <div class="bg-black w-full max-w-4xl aspect-video relative shadow-2xl">
-            <button onclick="closeModal('royal-video-modal')" class="absolute -top-10 right-0 text-white text-3xl hover:text-brandGold hover-trigger">&times;</button>
+            <button onclick="closeModal('royal-video-modal')" class="absolute -top-10 right-0 text-white text-3xl hover:text-brandGold hover-trigger p-2">&times;</button>
             <div id="royal-video-container" class="w-full h-full flex items-center justify-center text-white">Loading...</div>
         </div>
     </div>
 
     <!-- Size Guide Modal -->
-    <div id="size-guide-modal" class="modal-overlay"><div class="bg-brandLight p-10 md:p-14 max-w-lg w-full relative modal-content shadow-2xl rounded text-center"><button onclick="closeModal('size-guide-modal')" class="absolute top-6 right-6 text-2xl hover:text-brandGold">&times;</button><h3 class="font-serif italic text-3xl mb-6 text-brandBlack" data-i18n="sizeGuide">Size Guide</h3><div class="text-sm text-brandGray space-y-4 font-sans"><p>US 6 = 52mm</p><p>US 7 = 54.5mm</p><p>US 8 = 57mm</p><p>US 9 = 59.5mm</p><div class="mt-6 border-t border-brandBorder pt-4 text-xs">Tip: Measure the circumference of your finger with a string.</div></div></div></div>
+    <div id="size-guide-modal" class="modal-overlay"><div class="bg-brandLight p-10 md:p-14 max-w-lg w-full relative modal-content shadow-2xl rounded text-center m-4"><button onclick="closeModal('size-guide-modal')" class="absolute top-6 right-6 text-2xl hover:text-brandGold">&times;</button><h3 class="font-serif italic text-3xl mb-6 text-brandBlack" data-i18n="sizeGuide">Size Guide</h3><div class="text-sm text-brandGray space-y-4 font-sans"><p>US 6 = 52mm</p><p>US 7 = 54.5mm</p><p>US 8 = 57mm</p><p>US 9 = 59.5mm</p><div class="mt-6 border-t border-brandBorder pt-4 text-xs">Tip: Measure the circumference of your finger with a string.</div></div></div></div>
 
     <script>
         // --- CONFIG & INIT ---
@@ -582,6 +607,38 @@
             }
         }
 
+        function initCursor() {
+            // Only run on devices that support hover (desktop)
+            if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+                const dot = document.querySelector('.cursor-dot');
+                const outline = document.querySelector('.cursor-outline');
+                
+                if (!dot || !outline) return;
+
+                // Make them visible via JS just in case, though CSS handles it
+                dot.style.display = 'block';
+                outline.style.display = 'block';
+
+                let cursorX = gsap.quickTo(dot, "x", {duration: 0.1, ease: "power3"});
+                let cursorY = gsap.quickTo(dot, "y", {duration: 0.1, ease: "power3"});
+                let outlineX = gsap.quickTo(outline, "x", {duration: 0.3, ease: "power3"});
+                let outlineY = gsap.quickTo(outline, "y", {duration: 0.3, ease: "power3"});
+
+                window.addEventListener('mousemove', e => {
+                    cursorX(e.clientX); 
+                    cursorY(e.clientY);
+                    outlineX(e.clientX); 
+                    outlineY(e.clientY);
+                });
+
+                // Add hover effect for links/buttons
+                document.querySelectorAll('a, button, .hover-trigger').forEach(el => {
+                    el.addEventListener('mouseenter', () => document.body.classList.add('hovering'));
+                    el.addEventListener('mouseleave', () => document.body.classList.remove('hovering'));
+                });
+            }
+        }
+
         document.addEventListener('DOMContentLoaded', () => {
             fetchProductsFromSupabase(); // Call Supabase Fetch
             applyLanguage(currentLang); updateMenuItems(); initSlider(); initCursor(); 
@@ -608,19 +665,6 @@
                     slides[currentSlide].classList.add('active');
                 }
             }, 5000);
-        }
-
-        function initCursor() {
-            if(window.matchMedia("(hover: none)").matches) return;
-            const dot = document.querySelector('.cursor-dot'); const outline = document.querySelector('.cursor-outline');
-            let cursorX = gsap.quickTo(dot, "x", {duration: 0.1, ease: "power3"});
-            let cursorY = gsap.quickTo(dot, "y", {duration: 0.1, ease: "power3"});
-            let outlineX = gsap.quickTo(outline, "x", {duration: 0.3, ease: "power3"});
-            let outlineY = gsap.quickTo(outline, "y", {duration: 0.3, ease: "power3"});
-            window.addEventListener('mousemove', e => {
-                cursorX(e.clientX); cursorY(e.clientY);
-                outlineX(e.clientX); outlineY(e.clientY);
-            });
         }
 
         function applyLanguage(lang) {
@@ -670,7 +714,10 @@
                     </div>
                     <div class="flex justify-between items-start">
                         <div><h3 class="font-serif text-md text-brandDark">${currentLang === 'ar' ? p.title_ar : p.title_en}</h3><p class="text-[10px] text-brandGold uppercase font-bold tracking-widest mt-1">${p.category}</p></div>
-                        <span class="font-serif text-sm text-brandDark">${formatCurrency(p.price)}</span>
+                        <div class="flex flex-col items-end">
+                            ${p.old_price ? `<span class="text-xs text-gray-400 line-through">${formatCurrency(p.old_price)}</span>` : ''}
+                            <span class="font-serif text-sm text-brandDark">${formatCurrency(p.price)}</span>
+                        </div>
                     </div>
                 </div>
             `).join('');
@@ -809,6 +856,7 @@
                         <input id="adm-title-en" placeholder="English Title" class="admin-input">
                         <input id="adm-title-ar" placeholder="Arabic Title" class="admin-input">
                         <input id="adm-price" placeholder="Price (EGP)" type="number" class="admin-input">
+                        <input id="adm-old-price" placeholder="Old Price (Optional)" type="number" class="admin-input">
                         <input id="adm-cat" placeholder="Category" class="admin-input">
                         
                         <label class="admin-label">Images (Upload)</label>
@@ -921,6 +969,7 @@
                 title_en: document.getElementById('adm-title-en').value, 
                 title_ar: document.getElementById('adm-title-ar').value, 
                 price: Number(document.getElementById('adm-price').value), 
+                old_price: document.getElementById('adm-old-price').value ? Number(document.getElementById('adm-old-price').value) : null,
                 category: document.getElementById('adm-cat').value, 
                 images: imgs, 
                 // image: imgs[0], // Backwards compatibility
@@ -989,6 +1038,7 @@
                 document.getElementById('adm-title-en').value = p.title_en;
                 document.getElementById('adm-title-ar').value = p.title_ar;
                 document.getElementById('adm-price').value = p.price;
+                document.getElementById('adm-old-price').value = p.old_price || '';
                 document.getElementById('adm-cat').value = p.category;
                 document.getElementById('adm-head').value = p.headline || '';
                 document.getElementById('adm-desc').value = p.desc_en;
@@ -1169,7 +1219,13 @@
 
             if(els.title) els.title.innerText = currentLang==='ar' ? p.title_ar : p.title_en;
             if(els.headline) els.headline.innerText = p.headline || '';
-            if(els.price) els.price.innerText = formatCurrency(p.price);
+            if(els.price) {
+                if (p.old_price) {
+                    els.price.innerHTML = `<span class="text-gray-400 line-through text-lg mr-2">${formatCurrency(p.old_price)}</span> ${formatCurrency(p.price)}`;
+                } else {
+                    els.price.innerText = formatCurrency(p.price);
+                }
+            }
             if(els.desc) els.desc.innerText = currentLang==='ar' ? p.desc_ar : p.desc_en;
             if(els.cat) els.cat.innerText = p.category;
             if(els.qty) els.qty.innerText = currentQty;
